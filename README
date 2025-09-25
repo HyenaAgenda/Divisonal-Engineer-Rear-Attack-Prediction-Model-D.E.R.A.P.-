@@ -1,0 +1,84 @@
+# Divisonal Engineer Rear Attack Prediction Model [D.E.R.A.P.]
+
+
+
+This repo contains a small command-line inference script that loads a trained PyTorch regression model and two scaler objects,
+collects a single example's features from the user via standard input, scales them, runs the model, and prints the (unscaled) prediction.
+The model predicts the liklihood of being attacked based on several factors. This model was training on synthetic data for Opsec reasons
+and thus could be used with read data but currently isnt.
+
+THIS TOOL IS FOR EDUCATIONAL PURPOSES
+
+
+---------------------------------------------------------------------------------------------------------
+
+Files required
+
+
+- `horizon_attack_model.pt` — saved PyTorch `state_dict` of the trained model.
+- `scaler_x.pkl` — pickled scaler used to scale input features (e.g., `sklearn.preprocessing.StandardScaler` or similar).
+- `scaler_y.pkl` — pickled scaler used to inverse-transform model output to original target scale.
+- `Train_Model.py` — Python file containing the model definition. The script expects a callable/class `NN_Regression(input_size)` in this file.
+
+
+---------------------------------------------------------------------------------------------------------
+
+Dependencies
+
+Create a virtual environment and install dependencies. Minimum tested packages:
+
+- Python 3.8+
+- torch (same major version used to train the model; e.g. `torch>=1.8` recommended)
+- numpy
+- scikit-learn (if scalers were created with `sklearn`; the script only needs the scaler pickles to load)
+- pickle (builtin)
+
+Example (pip):
+```bash
+python -m venv venv
+source venv/bin/activate      # macOS / Linux
+# or `venv\Scripts\activate` on Windows
+pip install torch numpy scikit-learn
+
+---------------------------------------------------------------------------------------------------------
+
+
+Input features (order & ranges)
+
+- Total input vector length: 25 (12 numeric + 4 road-type one-hot + 4 terrain-type one-hot + 3 time-of-day one-hot + 2 route-type one-hot)
+- Numeric inputs (12), in this exact order:
+- distance_to_frontline_km — Distance to frontline (km). Prompt suggests range [60-160].
+- duration_hours — Duration (hours). Prompt suggests [0.5-6].
+- distance_km — Distance moved (km).
+- elevation_change — Elevation change (meters). Prompt suggests [0-200].
+- vegetation_density — Vegetation density, expected 0-1.
+- enemy_artillery_density — Enemy artillery density (unitless/count).
+- enemy_uav_activity — Enemy UAV activity (count).
+- recent_attack_count — Recent attack count.
+- intel_alert_level — Intel alert level, 0-1.
+- electronic_interference — Electronic interference, 0-1.
+- traffic_density — Traffic density (count).
+- weather_visibility — Weather visibility, suggested range [0.1-10].
+- Categorical inputs (one-hot encodings) and their order:
+- road_types (4) — ["paved", "gravel", "dirt", "forest track"]
+- terrain_types (4) — ["open_plains", "forest", "urban", "hills"]
+- times_of_day (3) — ["night", "day", "twilight"]
+- route_types (2) — ["msr", "asr"] (script uses [1,0] for msr, [0,1] for asr)
+
+
+The final feature vector concatenates the 12 numeric features, followed by road one-hot, terrain one-hot, time-of-day one-hot, then route one-hot — in that exact order.
+
+
+---------------------------------------------------------------------------------------------------------
+
+Security, ethical & legal notice
+
+The example script appears to predict an outcome described in the comments as an "attack probability." Tools that produce predictions about conflict, security incidents, or people’s behavior can have serious ethical, legal, and safety implications.
+
+Before using or deploying this model:
+Ensure the dataset and intended use comply with local laws and organizational policies.
+Validate model performance on representative, up-to-date data and carefully measure false positives/negatives and bias.
+Do not use the model for autonomous decision-making with high-stakes consequences without human oversight.
+Be cautious sharing or reusing pickle files: they can execute arbitrary code during load. Only load pickles from trusted sources.
+If you are not the model owner or you lack authority, do not use or distribute the model in operational environments.
+If this repository is part of a real-world operational tool, consult legal, privacy, and subject-matter experts before deployment.
